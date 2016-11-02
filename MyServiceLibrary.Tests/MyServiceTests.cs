@@ -10,7 +10,7 @@ namespace MyServiceLibrary.Tests
         [ExpectedException(typeof(ArgumentNullException))]
         public void Add_NullUser_ExceptionThrown()
         {
-            var service = new UserServiceStorage();
+            var service = new UserServiceStorage(null);
 
             service.Add(null);
         }
@@ -18,7 +18,7 @@ namespace MyServiceLibrary.Tests
         [TestMethod]
         public void Add_ValidUser_ValidUserIsAdded()
         {
-            var service = new UserServiceStorage();
+            var service = new UserServiceStorage(null);
 
             int id = service.Add(new User
             {
@@ -33,7 +33,7 @@ namespace MyServiceLibrary.Tests
         [ExpectedException(typeof(InvalidUserException))]
         public void Add_FirstNameIsNull_ExceptionThrown()
         {
-            var service = new UserServiceStorage();
+            var service = new UserServiceStorage(null);
 
             service.Add(new User
             {
@@ -47,7 +47,7 @@ namespace MyServiceLibrary.Tests
         [ExpectedException(typeof(InvalidUserException))]
         public void Add_LastNameIsNull_ExceptionThrown()
         {
-            var service = new UserServiceStorage();
+            var service = new UserServiceStorage(null);
 
             service.Add(new User
             {

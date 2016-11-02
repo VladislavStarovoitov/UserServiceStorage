@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MyServiceLibrary
 {
@@ -8,6 +9,16 @@ namespace MyServiceLibrary
         private int _lastId = 0;
         private List<User> _users = new List<User>();
         private IIdGenerator _generator;
+
+        public UserServiceStorage(IIdGenerator generator)
+        {
+            if (ReferenceEquals(generator, null))
+            {
+                throw new ArgumentNullException();
+            }
+
+            _generator = generator;
+        }
 
         public IIdGenerator IdGenerator
         {
@@ -25,11 +36,6 @@ namespace MyServiceLibrary
 
                 _generator = value;
             }
-        }
-
-        public UserServiceStorage(IIdGenerator generator)
-        {
-            _generator = generator;
         }
 
         public int Add(User user)
@@ -57,6 +63,23 @@ namespace MyServiceLibrary
             user.Id = _generator.GenerateId(_lastId);
             _users.Add(user);
             return user.Id;
+        }
+
+        public bool Remove(int id)
+        {
+            if (id < 0 && id > _lastId)
+            {
+                return false;
+            }
+
+            var removingUser = _users.FirstOrDefault(u => u.Id == id);
+            if (ReferenceEquals(removingUser, null))
+            {
+                return false;
+            }
+
+            _users.Remove(removingUser);
+            return true;
         }
     }
 }
