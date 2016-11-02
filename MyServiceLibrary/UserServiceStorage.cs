@@ -5,7 +5,7 @@ namespace MyServiceLibrary
 {
     public class UserServiceStorage
     {
-        private int lastId = 0;
+        private int _lastId = 0;
         private List<User> _users = new List<User>();
         private IIdGenerator _generator;
 
@@ -36,20 +36,27 @@ namespace MyServiceLibrary
         {
             if (user == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(user));
             }
 
             if (user.FirstName == null)
             {
-                throw new InvalidUserException();
+                throw new InvalidUserException(nameof(user.FirstName));
             }
 
             if (user.LastName == null)
             {
-                throw new InvalidUserException();
+                throw new InvalidUserException(nameof(user.LastName));
             }
 
-            return 0;
+            if (user.DateOfBirth < DateTime.Now)
+            {
+                throw new InvalidUserException(nameof(user.DateOfBirth));
+            }
+
+            user.Id = _generator.GenerateId(_lastId);
+            _users.Add(user);
+            return user.Id;
         }
     }
 }
