@@ -20,6 +20,17 @@ namespace MyServiceLibrary
             _generator = generator;
         }
 
+        public UserServiceStorage(IIdGenerator generator, IEnumerable<User> collection)
+        {
+            if (ReferenceEquals(generator, null))
+            {
+                throw new ArgumentNullException();
+            }
+
+            _generator = generator;
+            AddRange(collection);
+        }
+
         public IIdGenerator IdGenerator
         {
             get
@@ -45,6 +56,19 @@ namespace MyServiceLibrary
             user.Id = _generator.GenerateId(_lastId);
             _users.Add(user);
             return user.Id;
+        }
+
+        public void AddRange(IEnumerable<User> collection)
+        {
+            if (ReferenceEquals(collection, null))
+            {
+                throw new ArgumentNullException();
+            }
+
+            foreach (var item in collection)
+            {
+                Add(item);
+            }
         }
 
         public bool Remove(int id)
