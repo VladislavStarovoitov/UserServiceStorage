@@ -40,25 +40,7 @@ namespace MyServiceLibrary
 
         public int Add(User user)
         {
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-
-            if (user.FirstName == null)
-            {
-                throw new InvalidUserException(nameof(user.FirstName));
-            }
-
-            if (user.LastName == null)
-            {
-                throw new InvalidUserException(nameof(user.LastName));
-            }
-
-            if (user.DateOfBirth < DateTime.Now)
-            {
-                throw new InvalidUserException(nameof(user.DateOfBirth));
-            }
+            CheckUser(user);
 
             user.Id = _generator.GenerateId(_lastId);
             _users.Add(user);
@@ -73,13 +55,15 @@ namespace MyServiceLibrary
             }
 
             var removingUser = _users.FirstOrDefault(u => u.Id == id);
-            if (ReferenceEquals(removingUser, null))
-            {
-                return false;
-            }
+            return RemoveUser(removingUser);
+        }
 
-            _users.Remove(removingUser);
-            return true;
+        public bool Remove(User user)
+        {
+            CheckUser(user);
+
+            var removingUser = _users.FirstOrDefault(u => u.FirstName == user.FirstName && u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
+            return RemoveUser(removingUser);
         }
 
         public List<User> FindAll(Predicate<User> match)
@@ -99,6 +83,40 @@ namespace MyServiceLibrary
             }
 
             return list;
+        }
+
+        private void CheckUser(User user)
+        {
+            if (ReferenceEquals(user, null))
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
+            if (ReferenceEquals(user.FirstName, null))
+            {
+                throw new InvalidUserException(nameof(user.FirstName));
+            }
+
+            if (ReferenceEquals(user.LastName, null))
+            {
+                throw new InvalidUserException(nameof(user.LastName));
+            }
+
+            if (user.DateOfBirth > DateTime.Now)
+            {
+                throw new InvalidUserException(nameof(user.DateOfBirth));
+            }
+        }
+
+        private bool RemoveUser(User removingUser)
+        {
+            if (ReferenceEquals(removingUser, null))
+            {
+                return false;
+            }
+
+            _users.Remove(removingUser);
+            return true;
         }
     }
 }
