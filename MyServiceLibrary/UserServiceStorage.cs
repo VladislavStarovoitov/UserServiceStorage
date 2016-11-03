@@ -81,5 +81,24 @@ namespace MyServiceLibrary
             _users.Remove(removingUser);
             return true;
         }
+
+        public List<User> FindAll(Predicate<User> match)
+        {
+            if (ReferenceEquals(match, null))
+            {
+                throw new ArgumentNullException(nameof(match));
+            }
+
+            List<User> list = new List<User>();
+            foreach (var item in _users)
+            {
+                if (match(item))
+                {
+                    list.Add(item);
+                }
+            }
+
+            return list;
+        }
     }
 }
