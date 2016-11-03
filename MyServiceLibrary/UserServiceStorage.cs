@@ -8,7 +8,12 @@ namespace MyServiceLibrary
     {
         private int _lastId = 0;
         private List<User> _users = new List<User>();
-        private IIdGenerator _generator;
+        private Func<int, int> _generator;
+
+        public UserServiceStorage()
+        {
+            _generator = x => x++;
+        }
 
         public UserServiceStorage(IIdGenerator generator)
         {
@@ -17,7 +22,7 @@ namespace MyServiceLibrary
                 throw new ArgumentNullException();
             }
 
-            _generator = generator;
+            _generator = generator.GenerateId;
         }
 
         public UserServiceStorage(IIdGenerator generator, IEnumerable<User> collection)
@@ -27,17 +32,12 @@ namespace MyServiceLibrary
                 throw new ArgumentNullException();
             }
 
-            _generator = generator;
+            _generator = generator.GenerateId;
             AddRange(collection);
         }
 
         public IIdGenerator IdGenerator
         {
-            get
-            {
-                return _generator;
-            }
-
             set
             {
                 if (ReferenceEquals(value, null))
@@ -45,7 +45,7 @@ namespace MyServiceLibrary
                     throw new ArgumentNullException();
                 }
 
-                _generator = value;
+                _generator = value.GenerateId;
             }
         }
 
@@ -53,7 +53,7 @@ namespace MyServiceLibrary
         {
             CheckUser(user);
 
-            user.Id = _generator.GenerateId(_lastId);
+            user.Id = _generator(_lastId);
             _users.Add(user);
             return user.Id;
         }
