@@ -49,10 +49,7 @@ namespace MyServiceLibrary
 
         public bool Remove(int id)
         {
-            if (id < 0 && id > _lastId)
-            {
-                return false;
-            }
+            CheckId(id);
 
             var removingUser = _users.FirstOrDefault(u => u.Id == id);
             return RemoveUser(removingUser);
@@ -61,9 +58,32 @@ namespace MyServiceLibrary
         public bool Remove(User user)
         {
             CheckUser(user);
-
-            var removingUser = _users.FirstOrDefault(u => u.FirstName == user.FirstName && u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
+            var removingUser = _users.FirstOrDefault(u => u.FirstName == user.FirstName && 
+                u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
             return RemoveUser(removingUser);
+        }
+
+        public int RemoveAll(Predicate<User> match)
+        {
+            if (ReferenceEquals(match, null))
+            {
+                throw new ArgumentNullException(nameof(match));
+            }
+
+            return _users.RemoveAll(match);
+        }
+
+        public User Find(int id)
+        {
+            CheckId(id);
+            return _users.FirstOrDefault(u => u.Id == id);
+        }
+
+        public User Find(User user)
+        {
+            CheckUser(user);
+            return _users.FirstOrDefault(u => u.FirstName == user.FirstName &&
+                u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
         }
 
         public List<User> FindAll(Predicate<User> match)
@@ -105,6 +125,14 @@ namespace MyServiceLibrary
             if (user.DateOfBirth > DateTime.Now)
             {
                 throw new InvalidUserException(nameof(user.DateOfBirth));
+            }
+        }
+
+        private void CheckId(int id)
+        {
+            if (id < 0 && id > _lastId)
+            {
+                throw new ArgumentOutOfRangeException();
             }
         }
 
