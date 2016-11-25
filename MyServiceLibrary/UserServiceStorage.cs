@@ -79,11 +79,13 @@ namespace MyServiceLibrary
             return RemoveUser(removingUser);
         }
 
-        public bool Remove(User user)
+        public bool Remove(Predicate<User> match)//заменить  на предикапт
         {
-            CheckUser(user);
-            var removingUser = _users.FirstOrDefault(u => u.FirstName == user.FirstName && 
-                u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
+            if (ReferenceEquals(match, null))
+            {
+                throw new ArgumentNullException(nameof(match));
+            }
+            var removingUser = _users.FirstOrDefault(u => match(u));
             return RemoveUser(removingUser);
         }
 
