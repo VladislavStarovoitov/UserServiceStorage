@@ -2,10 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
 
 namespace MyServiceLibrary
 {
-    public class UserServiceStorage
+    public class UserServiceStorage : IEnumerable<User>
     {
         private int _lastId = 0;
         private List<User> _users = new List<User>();
@@ -22,12 +23,8 @@ namespace MyServiceLibrary
 
         public UserServiceStorage(ISaver<User> saver, IIdGenerator generator, IEnumerable<User> collection)
         {
-            if (ReferenceEquals(generator, null))
-            {
-                throw new ArgumentNullException();
-            }
-
-            _generator = generator;
+            IdGenerator = generator;
+            Saver = saver;
             AddRange(collection);
         }
 
@@ -41,6 +38,19 @@ namespace MyServiceLibrary
                 }
 
                 _generator = value;
+            }
+        }
+
+        public ISaver<User> Saver
+        {
+            set
+            {
+                if (ReferenceEquals(value, null))
+                {
+                    throw new ArgumentNullException();
+                }
+
+                _saver = value;
             }
         }
 
@@ -126,6 +136,11 @@ namespace MyServiceLibrary
             return list;
         }
 
+        public void Save()
+        {
+            _saver.Save(_users);
+        }
+
         private void CheckUser(User user)
         {
             if (ReferenceEquals(user, null))
@@ -166,6 +181,16 @@ namespace MyServiceLibrary
 
             _users.Remove(removingUser);
             return true;
+        }
+
+        public IEnumerator<User> GetEnumerator()
+        {
+            return _users.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         private class DefaultIdGenerator : IIdGenerator

@@ -1,4 +1,6 @@
 ﻿using MyServiceLibrary;
+using System;
+using System.Collections.Generic;
 
 namespace ServiceApplication
 {
@@ -6,8 +8,16 @@ namespace ServiceApplication
     {
         public static void Main(string[] args)
         {
-            var service = new UserServiceStorage();
+            var user = new User
+            {
+                FirstName = "Vlad",
+                LastName = "Star",
+                DateOfBirth = DateTime.Now
+            };
 
+            var service = new UserServiceStorage(new UserXmlSaver()) { user, user };
+
+            service.Save();
             // 1. Add a new user to the storage.
             // 2. Remove an user from the storage.
             // 3. Search for an user by the first name.
