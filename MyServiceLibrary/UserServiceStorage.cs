@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyServiceLibrary.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,31 +9,25 @@ namespace MyServiceLibrary
     {
         private int _lastId = 0;
         private List<User> _users = new List<User>();
-        private Func<int, int> _generator;
+        private IIdGenerator _generator;
+        private ISaver<User> _saver;
 
-        public UserServiceStorage()
+        public UserServiceStorage(ISaver<User> saver) : this(saver, new DefaultIdGenerator())
         {
-            _generator = x => x++;
         }
 
-        public UserServiceStorage(IIdGenerator generator)
+        public UserServiceStorage(ISaver<User> saver, IIdGenerator generator) : this(saver, generator, Enumerable.Empty<User>())
+        {
+        }
+
+        public UserServiceStorage(ISaver<User> saver, IIdGenerator generator, IEnumerable<User> collection)
         {
             if (ReferenceEquals(generator, null))
             {
                 throw new ArgumentNullException();
             }
 
-            _generator = generator.GenerateId;
-        }
-
-        public UserServiceStorage(IIdGenerator generator, IEnumerable<User> collection)
-        {
-            if (ReferenceEquals(generator, null))
-            {
-                throw new ArgumentNullException();
-            }
-
-            _generator = generator.GenerateId;
+            _generator = generator;
             AddRange(collection);
         }
 
@@ -45,7 +40,7 @@ namespace MyServiceLibrary
                     throw new ArgumentNullException();
                 }
 
-                _generator = value.GenerateId;
+                _generator = value;
             }
         }
 
@@ -53,7 +48,7 @@ namespace MyServiceLibrary
         {
             CheckUser(user);
 
-            user.Id = _generator(_lastId);
+            user.Id = _generator.GenerateId(_lastId);
             _users.Add(user);
             return user.Id;
         }
@@ -79,7 +74,7 @@ namespace MyServiceLibrary
             return RemoveUser(removingUser);
         }
 
-        public bool Remove(Predicate<User> match)//заменить  на предикапт
+        public bool Remove(Predicate<User> match)
         {
             if (ReferenceEquals(match, null))
             {
@@ -171,6 +166,11 @@ namespace MyServiceLibrary
 
             _users.Remove(removingUser);
             return true;
+        }
+
+        private class DefaultIdGenerator : IIdGenerator
+        {
+            public int GenerateId(int lastId) => lastId++;
         }
     }
 }

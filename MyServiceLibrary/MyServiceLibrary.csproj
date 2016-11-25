@@ -40,7 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IIdGenerator.cs" />
+    <Compile Include="Interfaces\IIdGenerator.cs" />
+    <Compile Include="Interfaces\ISaver.cs" />
     <Compile Include="InvalidUserException.cs" />
     <Compile Include="UserServiceStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
