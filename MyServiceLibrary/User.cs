@@ -26,12 +26,7 @@ namespace MyServiceLibrary
                 return false;
             }
 
-            if (otherUser.Id == Id)
-            {
-                return true;
-            }
-
-            return otherUser.FirstName == FirstName && otherUser.LastName == LastName &&
+            return otherUser.Id == Id || otherUser.FirstName == FirstName && otherUser.LastName == LastName &&
                 otherUser.DateOfBirth == DateOfBirth;
         }
 
