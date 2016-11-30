@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DBB45675-D296-43BE-85ED-A05E8DE614E8}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{901F6754-81BA-4D41-87C6-1326649B7C02}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ServiceApplication</RootNamespace>
-    <AssemblyName>ServiceApplication</AssemblyName>
+    <RootNamespace>MasterSlaveReplication</RootNamespace>
+    <AssemblyName>MasterSlaveReplication</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MasterSlaveReplication">
-      <HintPath>..\MasterSlaveReplication\bin\Debug\MasterSlaveReplication.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -46,17 +40,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Interfaces\IMaster.cs" />
+    <Compile Include="Interfaces\ISlave.cs" />
+    <Compile Include="Master.cs" />
+    <Compile Include="MasterSlaveConnector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="XmlSaver.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
+    <Compile Include="Slave.cs" />
+    <Compile Include="SlaveAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MyServiceLibrary\MyServiceLibrary.csproj">
-      <Project>{83615058-2919-4ca9-84c2-5368cef9f281}</Project>
+      <Project>{83615058-2919-4CA9-84C2-5368CEF9F281}</Project>
       <Name>MyServiceLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceApplication\ServiceApplication.csproj">
+      <Project>{DBB45675-D296-43BE-85ED-A05E8DE614E8}</Project>
+      <Name>ServiceApplication</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

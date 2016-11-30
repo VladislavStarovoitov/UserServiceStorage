@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace MyServiceLibrary
 {
-    public class UserServiceStorage : IEnumerable<User>
+    public class UserServiceStorage : IEnumerable<User>, IServiceStorage<User>
     {
         private int _lastId = 0;
         private List<User> _users = new List<User>();
@@ -59,6 +59,7 @@ namespace MyServiceLibrary
             CheckUser(user);
 
             user.Id = _generator.GenerateId(_lastId);
+            _lastId = user.Id;
             _users.Add(user);
             return user.Id;
         }

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyServiceLibrary", "MyServi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyServiceLibrary.Tests", "MyServiceLibrary.Tests\MyServiceLibrary.Tests.csproj", "{9A6C785F-F746-4392-89EF-C133C6FF80F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MasterSlaveReplication", "MasterSlaveReplication\MasterSlaveReplication.csproj", "{901F6754-81BA-4D41-87C6-1326649B7C02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{9A6C785F-F746-4392-89EF-C133C6FF80F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A6C785F-F746-4392-89EF-C133C6FF80F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A6C785F-F746-4392-89EF-C133C6FF80F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{901F6754-81BA-4D41-87C6-1326649B7C02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{901F6754-81BA-4D41-87C6-1326649B7C02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{901F6754-81BA-4D41-87C6-1326649B7C02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{901F6754-81BA-4D41-87C6-1326649B7C02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
