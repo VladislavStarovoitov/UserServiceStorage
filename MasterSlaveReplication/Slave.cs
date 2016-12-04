@@ -9,15 +9,26 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using MasterSlaveReplication.Message;
+using MyServiceLibrary.Interfaces;
 
 namespace MasterSlaveReplication
 {
     [Slave]
-    public class Slave<T> : MasterSlaveConnector, ISlave<T>
-    { 
-        //заменить на IServiceStorage
-        public Slave(IPEndPoint localEndpoint, UserServiceStorage serviceStorage = null) : base(serviceStorage)
+    public class Slave<T> : ISlave<T>
+    {
+        private IServiceStorage<T> _serviceStorage;
+
+        public Slave(IPEndPoint localEndpoint, IServiceStorage<T> serviceStorage)
         {
+            if (ReferenceEquals(serviceStorage, null))
+            {
+                throw new ArgumentNullException(nameof(serviceStorage));
+            }
+            _serviceStorage = serviceStorage;
+
             Thread listenThread = new Thread(new ParameterizedThreadStart(Listen));
             listenThread.Start(localEndpoint);
         }
@@ -80,7 +91,9 @@ namespace MasterSlaveReplication
             {
                 using (NetworkStream stream = ((TcpClient)client).GetStream())
                 {
-
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    MasterSlaveMessage<T> message = (MasterSlaveMessage<T>)formatter.Deserialize(stream);
+                    ChooseOperation(message);
                 }
             }
             catch (Exception e)
@@ -93,6 +106,24 @@ namespace MasterSlaveReplication
                 {
                     ((TcpClient)client).Close();
                 }
+            }
+        }
+
+        private void ChooseOperation(MasterSlaveMessage<T> message)
+        {
+            switch (message.Code)
+            {
+                case MessageCode.Add:
+                    _serviceStorage.AddRange(message.Items);
+                    break;
+
+                case MessageCode.Delete:
+                    _serviceStorage.RemoveAll(i => message.Items.Any(mI => mI.Equals(i)));
+                    break;
+
+                //case MessageCode.Update:
+                //    _serviceStorage.UpdateAll(message.Items);
+                //    break;              
             }
         }
     }

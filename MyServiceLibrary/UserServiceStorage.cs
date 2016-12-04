@@ -85,13 +85,13 @@ namespace MyServiceLibrary
             return RemoveUser(removingUser);
         }
 
-        public bool Remove(Predicate<User> match)
+        public bool Remove(User user)
         {
-            if (ReferenceEquals(match, null))
+            if (ReferenceEquals(user, null))
             {
-                throw new ArgumentNullException(nameof(match));
+                throw new ArgumentNullException(nameof(user));
             }
-            var removingUser = _users.FirstOrDefault(u => match(u));
+            var removingUser = _users.FirstOrDefault(u => u.Equals(user));
             return RemoveUser(removingUser);
         }
 
@@ -105,17 +105,43 @@ namespace MyServiceLibrary
             return _users.RemoveAll(match);
         }
 
-        public User Find(int id)
+        public void Update<TKey>(Func<User, TKey> keySelector, User user)
         {
-            CheckId(id);
-            return _users.FirstOrDefault(u => u.Id == id);
+            var key = keySelector(user);
+
+            User updatedUser = _users.Find(u => keySelector(u).Equals(key));
+            updatedUser.DateOfBirth = user.DateOfBirth;
+            updatedUser.FirstName = user.FirstName;
+            updatedUser.LastName = user.LastName;
+        }
+
+        public void UpdateAll<TKey>(Func<User, TKey> keySelector, IEnumerable<User> users)
+        {
+            if (ReferenceEquals(users, null))
+            {
+                throw new ArgumentNullException(nameof(users));
+            }
+
+            foreach (User item in users)
+            {
+                Update(keySelector, item);
+            }
+        }
+
+        //create KeyAttribute
+        //public void UpdateAll(IEnumerable<User> users)
+        //{
+        //}
+
+        public User Find<TKey>(Func<User, TKey> keySelector, TKey key)
+        {
+            return _users.FirstOrDefault(u => keySelector(u).Equals(key));
         }
 
         public User Find(User user)
         {
             CheckUser(user);
-            return _users.FirstOrDefault(u => u.FirstName == user.FirstName &&
-                u.LastName == user.LastName && u.DateOfBirth == user.DateOfBirth);
+            return _users.FirstOrDefault(u => u.Equals(user));
         }
 
         public List<User> FindAll(Predicate<User> match)
@@ -140,6 +166,11 @@ namespace MyServiceLibrary
         public void Save()
         {
             _saver.Save(_users);
+        }
+
+        public void Load()
+        {
+            _users = _saver.Load().ToList();
         }
 
         private void CheckUser(User user)
