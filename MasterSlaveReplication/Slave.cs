@@ -17,7 +17,7 @@ using MyServiceLibrary.Interfaces;
 namespace MasterSlaveReplication
 {
     [Slave]
-    public class Slave<T> : ISlave<T>
+    public class Slave<T> : MarshalByRefObject, ISlave<T>
     {
         private IServiceStorage<T> _serviceStorage;
 
@@ -35,12 +35,17 @@ namespace MasterSlaveReplication
 
         public T Find(T item)
         {
-            throw new NotImplementedException();
+            return _serviceStorage.Find(item);
         }
 
         public T Find(int id)
         {
             throw new NotImplementedException();
+        }
+
+        public IEnumerable<T> GetAll()
+        {
+            return _serviceStorage.GetAll();
         }
 
         public IEnumerable<T> FindAll(Predicate<T> match)

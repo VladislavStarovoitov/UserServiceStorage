@@ -133,15 +133,20 @@ namespace MyServiceLibrary
         //{
         //}
 
-        public User Find<TKey>(Func<User, TKey> keySelector, TKey key)
+        public User Find(Predicate<User> match)
         {
-            return _users.FirstOrDefault(u => keySelector(u).Equals(key));
+            return _users.FirstOrDefault(u => match(u));
         }
 
         public User Find(User user)
         {
             CheckUser(user);
             return _users.FirstOrDefault(u => u.Equals(user));
+        }
+
+        public IEnumerable<User> GetAll()
+        {
+            return _users.Select(u => u);
         }
 
         public List<User> FindAll(Predicate<User> match)

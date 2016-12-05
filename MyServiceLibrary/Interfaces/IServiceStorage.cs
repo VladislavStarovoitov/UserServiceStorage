@@ -14,9 +14,10 @@ namespace MyServiceLibrary.Interfaces
         int RemoveAll(Predicate<T> match);
         void Update<TKey>(Func<T, TKey> keySelector, T item);
         void UpdateAll<TKey>(Func<T, TKey> keySelector, IEnumerable<T> items);
-        T Find(T user);
+        T Find(T item);
         List<T> FindAll(Predicate<T> match);
-        T Find<TKey>(Func<T, TKey> keySelector, TKey key);
+        T Find(Predicate<T> match);
+        IEnumerable<T> GetAll();
         void Save();
         void Load();
     }

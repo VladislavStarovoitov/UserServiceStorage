@@ -10,6 +10,6 @@ namespace MasterSlaveReplication.Interfaces
     {
         T Find(int id);
         T Find(T item);
-        IEnumerable<T> FindAll(Predicate<T> match);
+        IEnumerable<T> GetAll();
     }
 }
