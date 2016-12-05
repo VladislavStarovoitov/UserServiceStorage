@@ -9,7 +9,7 @@ namespace MasterSlaveReplication.Message
     enum MessageCode
     {
         Add = 0,
-        Delete = 1,
+        Remove = 1,
         Update = 2
     }
 }

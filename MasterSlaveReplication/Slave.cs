@@ -17,11 +17,11 @@ using MyServiceLibrary.Interfaces;
 namespace MasterSlaveReplication
 {
     [Slave]
-    public class Slave<T> : MarshalByRefObject, ISlave<T>
+    public class Slave : MarshalByRefObject
     {
-        private IServiceStorage<T> _serviceStorage;
+        private IServiceStorage<User> _serviceStorage;
 
-        public Slave(IPEndPoint localEndpoint, IServiceStorage<T> serviceStorage)
+        public Slave(IPEndPoint localEndpoint, IServiceStorage<User> serviceStorage)
         {
             if (ReferenceEquals(serviceStorage, null))
             {
@@ -33,24 +33,24 @@ namespace MasterSlaveReplication
             listenThread.Start(localEndpoint);
         }
 
-        public T Find(T item)
+        public User Find(User item)
         {
             return _serviceStorage.Find(item);
         }
 
-        public T Find(int id)
+        public User Find(int id)
         {
-            throw new NotImplementedException();
+            return _serviceStorage.Find(x => x.Id == id);
         }
 
-        public IEnumerable<T> GetAll()
+        public IEnumerable<User> GetAll()
         {
             return _serviceStorage.GetAll();
         }
 
-        public IEnumerable<T> FindAll(Predicate<T> match)
+        public IEnumerable<User> FindAll(Predicate<User> match)
         {
-            throw new NotImplementedException();
+            return _serviceStorage.FindAll(match);
         }
 
         private void Listen(Object localEndpoint)
@@ -64,7 +64,7 @@ namespace MasterSlaveReplication
 
                 while (true)
                 {
-                    client = ((TcpListener)server).AcceptTcpClient();
+                    client = server.AcceptTcpClient();
 
                     Task.Run(() => Process(client));
                 }
@@ -97,7 +97,7 @@ namespace MasterSlaveReplication
                 using (NetworkStream stream = ((TcpClient)client).GetStream())
                 {
                     BinaryFormatter formatter = new BinaryFormatter();
-                    MasterSlaveMessage<T> message = (MasterSlaveMessage<T>)formatter.Deserialize(stream);
+                    MasterSlaveMessage<User> message = (MasterSlaveMessage<User>)formatter.Deserialize(stream);
                     ChooseOperation(message);
                 }
             }
@@ -114,7 +114,7 @@ namespace MasterSlaveReplication
             }
         }
 
-        private void ChooseOperation(MasterSlaveMessage<T> message)
+        private void ChooseOperation(MasterSlaveMessage<User> message)
         {
             switch (message.Code)
             {
@@ -122,13 +122,13 @@ namespace MasterSlaveReplication
                     _serviceStorage.AddRange(message.Items);
                     break;
 
-                case MessageCode.Delete:
+                case MessageCode.Remove:
                     _serviceStorage.RemoveAll(i => message.Items.Any(mI => mI.Equals(i)));
                     break;
 
-                //case MessageCode.Update:
-                //    _serviceStorage.UpdateAll(message.Items);
-                //    break;              
+                case MessageCode.Update:
+                    _serviceStorage.UpdateAll(message.Items);
+                    break;
             }
         }
     }

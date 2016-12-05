@@ -40,8 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Interfaces\IMaster.cs" />
-    <Compile Include="Interfaces\ISlave.cs" />
     <Compile Include="Master.cs" />
     <Compile Include="Message\Message.cs" />
     <Compile Include="Message\MessageCode.cs" />

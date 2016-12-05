@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
+using System.Threading;
 
 namespace MyServiceLibrary
 {
@@ -12,6 +13,7 @@ namespace MyServiceLibrary
         private List<User> _users = new List<User>();
         private IIdGenerator _generator;
         private ISaver<User> _saver;
+        private ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
         public UserServiceStorage(ISaver<User> saver) : this(saver, new DefaultIdGenerator())
         {
@@ -60,7 +62,15 @@ namespace MyServiceLibrary
 
             user.Id = _generator.GenerateId(_lastId);
             _lastId = user.Id;
-            _users.Add(user);
+            _locker.EnterWriteLock();
+            try
+            {
+                _users.Add(user);
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }            
             return user.Id;
         }
 
@@ -81,7 +91,16 @@ namespace MyServiceLibrary
         {
             CheckId(id);
 
-            var removingUser = _users.FirstOrDefault(u => u.Id == id);
+            User removingUser;
+            _locker.EnterReadLock();
+            try
+            {
+                removingUser = _users.FirstOrDefault(u => u.Id == id);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
             return RemoveUser(removingUser);
         }
 
@@ -91,7 +110,17 @@ namespace MyServiceLibrary
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            var removingUser = _users.FirstOrDefault(u => u.Equals(user));
+
+            User removingUser;
+            _locker.EnterReadLock();
+            try
+            {
+                removingUser = _users.FirstOrDefault(u => u.Equals(user));
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
             return RemoveUser(removingUser);
         }
 
@@ -102,20 +131,44 @@ namespace MyServiceLibrary
                 throw new ArgumentNullException(nameof(match));
             }
 
-            return _users.RemoveAll(match);
+            _locker.EnterWriteLock();
+            try
+            {
+                return _users.RemoveAll(match);
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
         }
 
-        public void Update<TKey>(Func<User, TKey> keySelector, User user)
+        public void Update(User user)
         {
-            var key = keySelector(user);
+            User updatedUser;
+            _locker.EnterReadLock();
+            try
+            {
+                updatedUser = _users.Find(u => u.Id == user.Id);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
 
-            User updatedUser = _users.Find(u => keySelector(u).Equals(key));
-            updatedUser.DateOfBirth = user.DateOfBirth;
-            updatedUser.FirstName = user.FirstName;
-            updatedUser.LastName = user.LastName;
+            _locker.EnterWriteLock();
+            try
+            {
+                updatedUser.DateOfBirth = user.DateOfBirth;
+                updatedUser.FirstName = user.FirstName;
+                updatedUser.LastName = user.LastName;
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
         }
 
-        public void UpdateAll<TKey>(Func<User, TKey> keySelector, IEnumerable<User> users)
+        public void UpdateAll(IEnumerable<User> users)
         {
             if (ReferenceEquals(users, null))
             {
@@ -124,29 +177,49 @@ namespace MyServiceLibrary
 
             foreach (User item in users)
             {
-                Update(keySelector, item);
+                Update(item);
             }
         }
 
-        //create KeyAttribute
-        //public void UpdateAll(IEnumerable<User> users)
-        //{
-        //}
-
         public User Find(Predicate<User> match)
         {
-            return _users.FirstOrDefault(u => match(u));
+            _locker.EnterReadLock();
+            try
+            {
+                return _users.FirstOrDefault(u => match(u));
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public User Find(User user)
         {
             CheckUser(user);
-            return _users.FirstOrDefault(u => u.Equals(user));
+
+            _locker.EnterReadLock();
+            try
+            {
+                return _users.FirstOrDefault(u => u.Equals(user));
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public IEnumerable<User> GetAll()
         {
-            return _users.Select(u => u);
+            _locker.EnterReadLock();
+            try
+            {
+                return _users.Select(u => u);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public List<User> FindAll(Predicate<User> match)
@@ -157,12 +230,20 @@ namespace MyServiceLibrary
             }
 
             List<User> list = new List<User>();
-            foreach (var item in _users)
+            _locker.EnterReadLock();
+            try
             {
-                if (match(item))
+                foreach (var item in _users)
                 {
-                    list.Add(item);
+                    if (match(item))
+                    {
+                        list.Add(item);
+                    }
                 }
+            }
+            finally
+            {
+                _locker.ExitReadLock();
             }
 
             return list;
@@ -170,12 +251,22 @@ namespace MyServiceLibrary
 
         public void Save()
         {
-            _saver.Save(_users);
+            _locker.EnterReadLock();
+            try
+            {
+                _saver.Save(_users);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public void Load()
         {
-            _users = _saver.Load().ToList();
+            List<User> users;
+            users = _saver.Load().ToList();
+            Interlocked.Exchange(ref _users, users);
         }
 
         private void CheckUser(User user)

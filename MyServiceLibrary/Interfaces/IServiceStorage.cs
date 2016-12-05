@@ -12,8 +12,8 @@ namespace MyServiceLibrary.Interfaces
         void AddRange(IEnumerable<T> collection);
         bool Remove(T item);
         int RemoveAll(Predicate<T> match);
-        void Update<TKey>(Func<T, TKey> keySelector, T item);
-        void UpdateAll<TKey>(Func<T, TKey> keySelector, IEnumerable<T> items);
+        void Update(T item);
+        void UpdateAll(IEnumerable<T> items);
         T Find(T item);
         List<T> FindAll(Predicate<T> match);
         T Find(Predicate<T> match);

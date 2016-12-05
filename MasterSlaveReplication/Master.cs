@@ -1,23 +1,24 @@
-﻿using MasterSlaveReplication.Interfaces;
-using MasterSlaveReplication.Message;
+﻿using MasterSlaveReplication.Message;
+using MyServiceLibrary;
 using MyServiceLibrary.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MasterSlaveReplication
 {
-    public class Master<T> : MarshalByRefObject, IMaster<T>
+    public class Master: MarshalByRefObject
     {
-        private IServiceStorage<T> _serviceStorage;
-        private IEnumerable<IPEndPoint> _endpoints;
+        private IServiceStorage<User> _serviceStorage;
+        private IEnumerable<IPEndPoint> _ipEndPoints;
 
-        public Master(IEnumerable<IPEndPoint> endpoints, IServiceStorage<T> serviceStorage)
+        public Master(IEnumerable<IPEndPoint> endpoints, IServiceStorage<User> serviceStorage)
         {
             if (ReferenceEquals(serviceStorage, null))
             {
@@ -29,57 +30,96 @@ namespace MasterSlaveReplication
                 throw new ArgumentNullException(nameof(endpoints));
             }
             _serviceStorage = serviceStorage;
-            _endpoints = endpoints;
-
-            //Thread listenThread = new Thread(new ParameterizedThreadStart(Listen));
-            //listenThread.Start(localEndpoint);
+            _ipEndPoints = endpoints;
         }
 
-        public int Add(T item)
+        public int Add(User item)
         {
             int id = _serviceStorage.Add(item);
-            //Task.Run(() => SendMessage(new MasterSlaveMessage<T> {Code = MessageCode.Add, Items = _serviceStorage.Find(x => x));
+            MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Add, Items = new List<User> { _serviceStorage.Find(x => x.Id == id) } };
+            SendMessages(message);
             return id;
         }
 
-        public void AddRange(IEnumerable<T> collection)
+        public void AddRange(IEnumerable<User> collection)
         {
-            throw new NotImplementedException();
+            if (ReferenceEquals(collection, null))
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
+
+            List<int> ids = new List<int>();
+            foreach (var item in collection)
+            {
+                ids.Add(Add(item));
+            }
+            MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = MessageCode.Add, Items = _serviceStorage.FindAll(x => ids.Any(i => i == x.Id)) };
+            SendMessages(message);
         }
 
-        public T Find(T item)
+        public User Find(User item)
         {
-            throw new NotImplementedException();
+            return _serviceStorage.Find(item);
         }
 
-        public T Find(int id)
+        public User Find(int id)
         {
-            throw new NotImplementedException();
+            return _serviceStorage.Find(x => x.Id == id);
         }
 
-        public IEnumerable<T> GetAll()
+        public IEnumerable<User> GetAll()
         {
-            throw new NotImplementedException();
+            return _serviceStorage.GetAll();
         }
 
         public void Load()
         {
-            throw new NotImplementedException();
+            _serviceStorage.Load();
         }
 
-        public bool Remove(T item)
+        public bool Remove(User item)
         {
-            throw new NotImplementedException();
+            bool result = _serviceStorage.Remove(item);
+            MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = MessageCode.Remove, Items = new List<User> { item } };
+            SendMessages(message);
+            return result;
         }
 
         public void Save()
         {
-            throw new NotImplementedException();
+            _serviceStorage.Save();
         }
 
-        private void SendMessage(MasterSlaveMessage<T> message)
+        private void SendMessages(MasterSlaveMessage<User> message)
         {
+            foreach (var ipEndPoint in _ipEndPoints)
+            {
+                Task.Run(() => SendMessage(message, ipEndPoint));
+            }
+        }
 
-        } 
+        private void SendMessage(MasterSlaveMessage<User> message, IPEndPoint endPoint)
+        {
+            try
+            {
+                using (TcpClient client = new TcpClient())
+                {
+                    client.Connect(endPoint);
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        BinaryFormatter formatter = new BinaryFormatter();
+                        formatter.Serialize(stream, message);
+                    }
+                }
+            }
+            catch (SocketException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
     }
 }
