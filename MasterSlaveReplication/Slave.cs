@@ -1,5 +1,4 @@
-﻿using MasterSlaveReplication.Interfaces;
-using MyServiceLibrary;
+﻿using MyServiceLibrary;
 using ServiceApplication;
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,7 @@ namespace MasterSlaveReplication
     [Slave]
     public class Slave : MarshalByRefObject
     {
-        private IServiceStorage<User> _serviceStorage;
+        public IServiceStorage<User> _serviceStorage;
 
         public Slave(IPEndPoint localEndpoint, IServiceStorage<User> serviceStorage)
         {
@@ -53,7 +52,7 @@ namespace MasterSlaveReplication
             return _serviceStorage.FindAll(match);
         }
 
-        private void Listen(Object localEndpoint)
+        private void Listen(object localEndpoint)
         {
             TcpListener server = null;
             TcpClient client = null;
@@ -66,7 +65,8 @@ namespace MasterSlaveReplication
                 {
                     client = server.AcceptTcpClient();
 
-                    Task.Run(() => Process(client));
+                    //Task.Run(() =>
+                    Process(client);
                 }
             }
             catch (SocketException e)
@@ -79,11 +79,11 @@ namespace MasterSlaveReplication
             }
             finally
             {
-                if (ReferenceEquals(server, null))
+                if (!ReferenceEquals(server, null))
                 {
                     server.Stop();
                 }
-                if (ReferenceEquals(client, null))
+                if (!ReferenceEquals(client, null))
                 {
                     client.Close();
                 }
@@ -95,9 +95,10 @@ namespace MasterSlaveReplication
             try
             {
                 using (NetworkStream stream = ((TcpClient)client).GetStream())
-                {
+                {                   
                     BinaryFormatter formatter = new BinaryFormatter();
-                    MasterSlaveMessage<User> message = (MasterSlaveMessage<User>)formatter.Deserialize(stream);
+                    MasterSlaveMessage<User> message = ((MasterSlaveMessage<User>)formatter.Deserialize(stream));
+                  
                     ChooseOperation(message);
                 }
             }
@@ -107,7 +108,7 @@ namespace MasterSlaveReplication
             }
             finally
             {
-                if (ReferenceEquals(client, null))
+                if (!ReferenceEquals(client, null))
                 {
                     ((TcpClient)client).Close();
                 }
@@ -120,6 +121,7 @@ namespace MasterSlaveReplication
             {
                 case MessageCode.Add:
                     _serviceStorage.AddRange(message.Items);
+                    Console.WriteLine(_serviceStorage.Find(x => x.Id == message.Items.First().Id).FirstName);
                     break;
 
                 case MessageCode.Remove:

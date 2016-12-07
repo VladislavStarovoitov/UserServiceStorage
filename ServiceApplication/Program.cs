@@ -3,6 +3,9 @@ using MasterSlaveReplication;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
+using System.Net;
+using System.Threading;
 
 namespace ServiceApplication
 {
@@ -10,23 +13,24 @@ namespace ServiceApplication
     {
         public static void Main(string[] args)
         {
-            //    var user = new User
-            //    {
-            //        FirstName = "Vlad",
-            //        LastName = "Star",
-            //        DateOfBirth = DateTime.Now
-            //    };
+            AppDomain masterDomain = AppDomain.CreateDomain("Master");
+            AppDomain slaveDomain0 = AppDomain.CreateDomain("Slave0");
+            AppDomain slaveDomain1 = AppDomain.CreateDomain("Slave1");
 
-            //    var service = new UserServiceStorage(new UserXmlSaver()) { user, user };
+            Slave[] slaves = new Slave[2];
+            string ip = "127.0.0.1";
 
-            //    service.Save();
-            //    // 1. Add a new user to the storage.
-            //    // 2. Remove an user from the storage.
-            //    // 3. Search for an user by the first name.
-            //    // 4. Search for an user by the last name.
-            Action a = () => new Slave<User>();
-            new Task(a).Start();
-            Master.Send();
+            IPAddress ipAddr = IPAddress.Parse(ip);
+
+            IPEndPoint[] a = new IPEndPoint[] { new IPEndPoint(ipAddr, 5556), new IPEndPoint(ipAddr, 5557) };
+            slaves[0] = new Slave(a[0], new UserServiceStorage(new UserXmlSaver()));
+            slaves[1] = new Slave(a[1], new UserServiceStorage(new UserXmlSaver())); 
+
+            UserServiceStorage storage = (UserServiceStorage)masterDomain.CreateInstanceAndUnwrap(typeof(UserServiceStorage).Assembly.FullName, typeof(UserServiceStorage).FullName, false, System.Reflection.BindingFlags.Default, null, new object[] { new UserXmlSaver() }, null, null);
+            Master master = (Master)masterDomain.CreateInstanceAndUnwrap(typeof(Master).Assembly.FullName, typeof(Master).FullName, false, System.Reflection.BindingFlags.Default, null, new object[] { a, storage }, null, null);
+
+            master.Add(new User {LastName = "Star", FirstName = "Vlad", DateOfBirth = DateTime.Now });
+            master.Add(new User { LastName = "Star", FirstName = "Nim", DateOfBirth = DateTime.Now });
         }
     }
 }

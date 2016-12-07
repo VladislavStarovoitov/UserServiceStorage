@@ -10,6 +10,7 @@ using System.Xml.Serialization;
 
 namespace ServiceApplication
 {
+    [Serializable]
     public class UserXmlSaver : ISaver<User>
     {
         public IEnumerable<User> Load()

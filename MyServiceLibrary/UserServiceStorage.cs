@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace MyServiceLibrary
 {
-    public class UserServiceStorage : IEnumerable<User>, IServiceStorage<User>
+    public class UserServiceStorage : MarshalByRefObject, IEnumerable<User>, IServiceStorage<User>
     {
         private int _lastId = 0;
         private List<User> _users = new List<User>();
@@ -60,8 +60,8 @@ namespace MyServiceLibrary
         {
             CheckUser(user);
 
-            user.Id = _generator.GenerateId(_lastId);
-            _lastId = user.Id;
+            _lastId = _generator.GenerateId(_lastId);
+            user.Id = _lastId;
             _locker.EnterWriteLock();
             try
             {
@@ -321,9 +321,10 @@ namespace MyServiceLibrary
             return GetEnumerator();
         }
 
+        [Serializable]
         private class DefaultIdGenerator : IIdGenerator
         {
-            public int GenerateId(int lastId) => lastId++;
+            public int GenerateId(int lastId) => ++lastId;
         }
     }
 }
