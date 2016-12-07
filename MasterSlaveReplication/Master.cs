@@ -15,7 +15,7 @@ namespace MasterSlaveReplication
 {
     public class Master: MarshalByRefObject
     {
-        public IServiceStorage<User> _serviceStorage;
+        private IServiceStorage<User> _serviceStorage;
         private IEnumerable<IPEndPoint> _ipEndPoints;
 
         public Master(IEnumerable<IPEndPoint> endpoints, IServiceStorage<User> serviceStorage)

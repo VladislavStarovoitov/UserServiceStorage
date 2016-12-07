@@ -18,7 +18,7 @@ namespace MasterSlaveReplication
     [Slave]
     public class Slave : MarshalByRefObject
     {
-        public IServiceStorage<User> _serviceStorage;
+        private IServiceStorage<User> _serviceStorage;
 
         public Slave(IPEndPoint localEndpoint, IServiceStorage<User> serviceStorage)
         {
