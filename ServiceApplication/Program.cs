@@ -24,13 +24,29 @@ namespace ServiceApplication
 
             IPEndPoint[] a = new IPEndPoint[] { new IPEndPoint(ipAddr, 5556), new IPEndPoint(ipAddr, 5557) };
             slaves[0] = new Slave(a[0], new UserServiceStorage(new UserXmlSaver()));
-            slaves[1] = new Slave(a[1], new UserServiceStorage(new UserXmlSaver())); 
+            slaves[1] = new Slave(a[1], new UserServiceStorage(new UserXmlSaver()));
 
-            UserServiceStorage storage = (UserServiceStorage)masterDomain.CreateInstanceAndUnwrap(typeof(UserServiceStorage).Assembly.FullName, typeof(UserServiceStorage).FullName, false, System.Reflection.BindingFlags.Default, null, new object[] { new UserXmlSaver() }, null, null);
-            Master master = (Master)masterDomain.CreateInstanceAndUnwrap(typeof(Master).Assembly.FullName, typeof(Master).FullName, false, System.Reflection.BindingFlags.Default, null, new object[] { a, storage }, null, null);
+            
+            Master master = new Master(a, new UserServiceStorage(new UserXmlSaver()));
 
             master.Add(new User {LastName = "Star", FirstName = "Vlad", DateOfBirth = DateTime.Now });
-            master.Add(new User { LastName = "Star", FirstName = "Nim", DateOfBirth = DateTime.Now });
+
+            var u = new User { LastName = "Star", FirstName = "Nim", DateOfBirth = DateTime.Now };
+
+            master.Add(u);
+
+            Thread.Sleep(1000);
+
+            var user = master.Find(1);
+            user.FirstName = "123";
+            master.Update(user);
+
+            Thread.Sleep(1000);
+            var f1 = master.Find(2);
+            var f2 = slaves[0].Find(u);
+
+            master.Remove(1);
+            Thread.Sleep(1000);
         }
     }
 }

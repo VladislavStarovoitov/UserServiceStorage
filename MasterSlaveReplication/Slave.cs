@@ -19,6 +19,7 @@ namespace MasterSlaveReplication
     public class Slave : MarshalByRefObject
     {
         private IServiceStorage<User> _serviceStorage;
+        private ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
         public Slave(IPEndPoint localEndpoint, IServiceStorage<User> serviceStorage)
         {
@@ -34,22 +35,54 @@ namespace MasterSlaveReplication
 
         public User Find(User item)
         {
-            return _serviceStorage.Find(item);
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.Find(item);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public User Find(int id)
         {
-            return _serviceStorage.Find(x => x.Id == id);
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.Find(x => x.Id == id);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public IEnumerable<User> GetAll()
         {
-            return _serviceStorage.GetAll();
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.GetAll();
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         public IEnumerable<User> FindAll(Predicate<User> match)
         {
-            return _serviceStorage.FindAll(match);
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.FindAll(match);
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }   
         }
 
         private void Listen(object localEndpoint)
@@ -64,18 +97,16 @@ namespace MasterSlaveReplication
                 while (true)
                 {
                     client = server.AcceptTcpClient();
-
-                    //Task.Run(() =>
                     Process(client);
                 }
             }
             catch (SocketException e)
             {
-                Console.WriteLine(e.Message);//добавить логирование
+                Console.WriteLine(e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);//добавить логирование
+                Console.WriteLine(e.Message);
             }
             finally
             {
@@ -99,12 +130,12 @@ namespace MasterSlaveReplication
                     BinaryFormatter formatter = new BinaryFormatter();
                     MasterSlaveMessage<User> message = ((MasterSlaveMessage<User>)formatter.Deserialize(stream));
                   
-                    ChooseOperation(message);
+                    HandleRequest(message);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);//добавить логирование
+                Console.WriteLine(e.Message);
             }
             finally
             {
@@ -115,22 +146,67 @@ namespace MasterSlaveReplication
             }
         }
 
-        private void ChooseOperation(MasterSlaveMessage<User> message)
+        private void HandleRequest(MasterSlaveMessage<User> message)
         {
             switch (message.Code)
             {
                 case MessageCode.Add:
-                    _serviceStorage.AddRange(message.Items);
-                    Console.WriteLine(_serviceStorage.Find(x => x.Id == message.Items.First().Id).FirstName);
+                    AddRange(message.Items);
                     break;
 
                 case MessageCode.Remove:
-                    _serviceStorage.RemoveAll(i => message.Items.Any(mI => mI.Equals(i)));
+                    RemoveAll(message.Items);
                     break;
 
                 case MessageCode.Update:
-                    _serviceStorage.UpdateAll(message.Items);
+                    UpdateAll(message.Items);
                     break;
+            }
+        }
+
+        private void AddRange(IEnumerable<User> users)
+        {
+            List<int> ids = users.Select(u => u.Id).ToList();
+            _locker.EnterWriteLock();
+            try
+            {
+                _serviceStorage.AddRange(users);
+                int i = 0;
+                foreach (var item in users)
+                {
+                    item.Id = ids[i];
+                    i++;
+                }
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
+        }
+
+        private void RemoveAll(IEnumerable<User> users)
+        {
+            _locker.EnterWriteLock();
+            try
+            {
+                _serviceStorage.RemoveAll(i => users.Any(mI => mI.Equals(i)));
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
+        }
+
+        private void UpdateAll(IEnumerable<User> users)
+        {
+            _locker.EnterWriteLock();
+            try
+            {
+                _serviceStorage.UpdateAll(users);
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
             }
         }
     }

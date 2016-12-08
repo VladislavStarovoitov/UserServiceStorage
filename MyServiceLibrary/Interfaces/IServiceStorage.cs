@@ -11,6 +11,7 @@ namespace MyServiceLibrary.Interfaces
         int Add(T item);
         void AddRange(IEnumerable<T> collection);
         bool Remove(T item);
+        bool Remove(Predicate<T> match);
         int RemoveAll(Predicate<T> match);
         void Update(T item);
         void UpdateAll(IEnumerable<T> items);

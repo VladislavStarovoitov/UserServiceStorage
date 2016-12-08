@@ -13,7 +13,6 @@ namespace MyServiceLibrary
         private List<User> _users = new List<User>();
         private IIdGenerator _generator;
         private ISaver<User> _saver;
-        private ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
         public UserServiceStorage(ISaver<User> saver) : this(saver, new DefaultIdGenerator())
         {
@@ -62,15 +61,7 @@ namespace MyServiceLibrary
 
             _lastId = _generator.GenerateId(_lastId);
             user.Id = _lastId;
-            _locker.EnterWriteLock();
-            try
-            {
-                _users.Add(user);
-            }
-            finally
-            {
-                _locker.ExitWriteLock();
-            }            
+            _users.Add(user);           
             return user.Id;
         }
 
@@ -92,15 +83,7 @@ namespace MyServiceLibrary
             CheckId(id);
 
             User removingUser;
-            _locker.EnterReadLock();
-            try
-            {
-                removingUser = _users.FirstOrDefault(u => u.Id == id);
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            removingUser = _users.FirstOrDefault(u => u.Id == id);
             return RemoveUser(removingUser);
         }
 
@@ -112,15 +95,19 @@ namespace MyServiceLibrary
             }
 
             User removingUser;
-            _locker.EnterReadLock();
-            try
+            removingUser = _users.FirstOrDefault(u => u.Equals(user));
+            return RemoveUser(removingUser);
+        }
+
+        public bool Remove(Predicate<User> match)
+        {
+            if (ReferenceEquals(match, null))
             {
-                removingUser = _users.FirstOrDefault(u => u.Equals(user));
+                throw new ArgumentNullException(nameof(match));
             }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+
+            User removingUser;
+            removingUser = _users.FirstOrDefault(u => match(u));
             return RemoveUser(removingUser);
         }
 
@@ -131,41 +118,17 @@ namespace MyServiceLibrary
                 throw new ArgumentNullException(nameof(match));
             }
 
-            _locker.EnterWriteLock();
-            try
-            {
-                return _users.RemoveAll(match);
-            }
-            finally
-            {
-                _locker.ExitWriteLock();
-            }
+            return _users.RemoveAll(match);
         }
 
         public void Update(User user)
         {
             User updatedUser;
-            _locker.EnterReadLock();
-            try
-            {
-                updatedUser = _users.Find(u => u.Id == user.Id);
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            updatedUser = _users.Find(u => u.Id == user.Id);
 
-            _locker.EnterWriteLock();
-            try
-            {
-                updatedUser.DateOfBirth = user.DateOfBirth;
-                updatedUser.FirstName = user.FirstName;
-                updatedUser.LastName = user.LastName;
-            }
-            finally
-            {
-                _locker.ExitWriteLock();
-            }
+            updatedUser.DateOfBirth = user.DateOfBirth;
+            updatedUser.FirstName = user.FirstName;
+            updatedUser.LastName = user.LastName;
         }
 
         public void UpdateAll(IEnumerable<User> users)
@@ -183,43 +146,19 @@ namespace MyServiceLibrary
 
         public User Find(Predicate<User> match)
         {
-            _locker.EnterReadLock();
-            try
-            {
-                return _users.FirstOrDefault(u => match(u));
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return _users.FirstOrDefault(u => match(u));
         }
 
         public User Find(User user)
         {
             CheckUser(user);
 
-            _locker.EnterReadLock();
-            try
-            {
-                return _users.FirstOrDefault(u => u.Equals(user));
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return _users.FirstOrDefault(u => u.Equals(user));
         }
 
         public IEnumerable<User> GetAll()
         {
-            _locker.EnterReadLock();
-            try
-            {
-                return _users.Select(u => u);
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            return _users.Select(u => u);
         }
 
         public List<User> FindAll(Predicate<User> match)
@@ -229,44 +168,17 @@ namespace MyServiceLibrary
                 throw new ArgumentNullException(nameof(match));
             }
 
-            List<User> list = new List<User>();
-            _locker.EnterReadLock();
-            try
-            {
-                foreach (var item in _users)
-                {
-                    if (match(item))
-                    {
-                        list.Add(item);
-                    }
-                }
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
-
-            return list;
+            return _users.FindAll(match);
         }
 
         public void Save()
         {
-            _locker.EnterReadLock();
-            try
-            {
-                _saver.Save(_users);
-            }
-            finally
-            {
-                _locker.ExitReadLock();
-            }
+            _saver.Save(_users);
         }
 
         public void Load()
         {
-            List<User> users;
-            users = _saver.Load().ToList();
-            Interlocked.Exchange(ref _users, users);
+            _users = _saver.Load().ToList();
         }
 
         private void CheckUser(User user)

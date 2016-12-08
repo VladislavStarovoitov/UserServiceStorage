@@ -35,10 +35,9 @@ namespace MasterSlaveReplication
 
         public int Add(User item)
         {
-            int id = _serviceStorage.Add(item);
-            MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Add, Items = new List<User> { _serviceStorage.Find(x => x.Id == id) } };
-            SendMessages(message);
-            return id;
+            _serviceStorage.Add(item);
+            SendMessages(MessageCode.Add, new List<User> { item });
+            return item.Id;
         }
 
         public void AddRange(IEnumerable<User> collection)
@@ -47,14 +46,9 @@ namespace MasterSlaveReplication
             {
                 throw new ArgumentNullException(nameof(collection));
             }
-
-            List<int> ids = new List<int>();
-            foreach (var item in collection)
-            {
-                ids.Add(Add(item));
-            }
-            MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = MessageCode.Add, Items = _serviceStorage.FindAll(x => ids.Any(i => i == x.Id)) };
-            SendMessages(message);
+            
+            _serviceStorage.AddRange(collection);
+            SendMessages(MessageCode.Add, collection);
         }
 
         public User Find(User item)
@@ -72,6 +66,18 @@ namespace MasterSlaveReplication
             return _serviceStorage.GetAll();
         }
 
+        public void Update(User user)
+        {
+            _serviceStorage.Update(user);MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Update, Items = new List<User> { user } };
+            SendMessages(MessageCode.Update, new List<User> { user });
+        }
+
+        public void UpdateAll(IEnumerable<User> users)
+        {
+            _serviceStorage.UpdateAll(users); MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Update, Items = users };
+            SendMessages(MessageCode.Update, users);
+        }
+
         public void Load()
         {
             _serviceStorage.Load();
@@ -80,8 +86,15 @@ namespace MasterSlaveReplication
         public bool Remove(User item)
         {
             bool result = _serviceStorage.Remove(item);
-            MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = MessageCode.Remove, Items = new List<User> { item } };
-            SendMessages(message);
+            SendMessages(MessageCode.Remove, new List<User> { item });
+            return result;
+        }
+
+        public bool Remove(int id)
+        {
+            User removingUser = Find(id);
+            bool result = _serviceStorage.Remove(x => x.Id == id);
+            SendMessages(MessageCode.Remove, new List<User> { removingUser });
             return result;
         }
 
@@ -90,11 +103,13 @@ namespace MasterSlaveReplication
             _serviceStorage.Save();
         }
 
-        private void SendMessages(MasterSlaveMessage<User> message)
+        private void SendMessages(MessageCode code, IEnumerable<User> users)
         {
+            MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = code, Items = users };
             foreach (var ipEndPoint in _ipEndPoints)
             {
-                Task.Run(() => SendMessage(message, ipEndPoint));
+                Task.Run(() =>
+                    SendMessage(message, ipEndPoint));
             }
         }
 
