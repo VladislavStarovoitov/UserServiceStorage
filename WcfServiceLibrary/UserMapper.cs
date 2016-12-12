@@ -17,6 +17,11 @@ namespace WcfServiceLibrary
 
         public static UserDataContract ToUserDataContract(this User user)
         {
+            if (ReferenceEquals(user, null))
+            {
+                return null;
+            }
+
             return new UserDataContract
             {
                 Id = user.Id,

@@ -21,7 +21,7 @@ namespace MasterSlaveReplication
             {
                 throw new ArgumentNullException(nameof(localEndpoint));
             }
-            _serviceStorage = new UserServiceStorage(new MyServiceLibrary.UserXmlSaver());
+            _serviceStorage = new UserServiceStorage(new UserXmlSaver());
 
             Thread listenThread = new Thread(new ParameterizedThreadStart(Listen));
             listenThread.Start(localEndpoint);
@@ -58,7 +58,7 @@ namespace MasterSlaveReplication
             _locker.EnterReadLock();
             try
             {
-                return _serviceStorage.GetAll();
+                return _serviceStorage.GetAll().ToList();
             }
             finally
             {
@@ -66,17 +66,44 @@ namespace MasterSlaveReplication
             }
         }
 
-        public IEnumerable<User> FindAll(Predicate<User> match)
+
+        public IEnumerable<User> FindByFirstName(string firstName)
         {
             _locker.EnterReadLock();
             try
             {
-                return _serviceStorage.FindAll(match);
+                return _serviceStorage.FindAll(x => x.FirstName == firstName).ToList();
             }
             finally
             {
                 _locker.ExitReadLock();
-            }   
+            }
+        }
+
+        public IEnumerable<User> FindByLastName(string lastName)
+        {
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.FindAll(x => x.LastName == lastName).ToList();
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
+        }
+
+        public IEnumerable<User> FindByDateOfBirth(DateTime dateOfBirth)
+        {
+            _locker.EnterReadLock();
+            try
+            {
+                return _serviceStorage.FindAll(x => x.DateOfBirth == dateOfBirth).ToList();
+            }
+            finally
+            {
+                _locker.ExitReadLock();
+            }
         }
 
         private void Listen(object localEndpoint)
@@ -155,6 +182,10 @@ namespace MasterSlaveReplication
                 case MessageCode.Update:
                     UpdateAll(message.Items);
                     break;
+
+                case MessageCode.Load:
+
+                    break;
             }
         }
 
@@ -197,6 +228,20 @@ namespace MasterSlaveReplication
             try
             {
                 _serviceStorage.UpdateAll(users);
+            }
+            finally
+            {
+                _locker.ExitWriteLock();
+            }
+        }
+
+        private void Load(IEnumerable<User> users)
+        {
+            _locker.EnterWriteLock();
+            try
+            {
+                _serviceStorage = null;
+                _serviceStorage.AddRange(users);
             }
             finally
             {

@@ -5,6 +5,7 @@ using WcfServiceLibrary.Interfaces;
 using MasterSlaveReplication;
 using System.Net;
 using System.ServiceModel;
+using System.IO;
 
 namespace WcfServiceLibrary.Services
 {
@@ -15,10 +16,15 @@ namespace WcfServiceLibrary.Services
 
         static MasterService()
         {
-            IEnumerable<IPEndPoint> ipEndPoints = IpEndPointReader.GetIpEndPoints();
+            IEnumerable<IPEndPoint> ipEndPoints = IpEndPointReader.GetIpEndPoints().ToList();
+            var appDomainSetup = new AppDomainSetup
+            {
+                ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
+                PrivateBinPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Master")
+            };
+            AppDomain masterDomain = AppDomain.CreateDomain("Master", null, appDomainSetup);
 
-            AppDomain masterDomain = AppDomain.CreateDomain("Master");
-            master = (Master)masterDomain.CreateInstanceAndUnwrap(typeof(Master).Assembly.FullName,
+            master =  (Master)masterDomain.CreateInstanceAndUnwrap(typeof(Master).Assembly.FullName,
                 typeof(Master).FullName, false, System.Reflection.BindingFlags.Default, null,
                 new object[] { ipEndPoints }, null, null);
         }
@@ -35,16 +41,18 @@ namespace WcfServiceLibrary.Services
         public UserDataContract Find(UserDataContract user)
             => master.Find(user.ToUser()).ToUserDataContract();
 
-        public IEnumerable<UserDataContract> FindByFirstName(UserDataContract user)
-            => master.FindAll(u => u.FirstName == user.FirstName).Select(u => u.ToUserDataContract());
+        public IEnumerable<UserDataContract> FindByFirstName(string firstName)
+            => master.FindByFirstName(firstName).Select(u => u.ToUserDataContract());
 
 
-        public IEnumerable<UserDataContract> FindByLastName(UserDataContract user)
-            => master.FindAll(u => u.LastName == user.LastName).Select(u => u.ToUserDataContract());
+        public IEnumerable<UserDataContract> FindByLastName(string lastName)
+            => master.FindByLastName(lastName).Select(u => u.ToUserDataContract());
 
+        public IEnumerable<UserDataContract> FindByDateOfBirth(DateTime dateOfBirth)
+            => master.FindByDateOfBirth(dateOfBirth).Select(u => u.ToUserDataContract());
 
         public IEnumerable<UserDataContract> GetAll()
-            => master.GetAll().Select(u => u.ToUserDataContract());
+            => master.GetAll().Select(u => u.ToUserDataContract()).ToList();
 
         public void Update(UserDataContract user)
             => master.Update(user.ToUser());
@@ -57,5 +65,15 @@ namespace WcfServiceLibrary.Services
 
         public void Save()
             => master.Save();
+
+        public bool Remove(UserDataContract user)
+        {
+            return master.Remove(user.ToUser());
+        }
+
+        public bool RemoveById(int id)
+        {
+            return master.Remove(id);
+        }
     }
 }

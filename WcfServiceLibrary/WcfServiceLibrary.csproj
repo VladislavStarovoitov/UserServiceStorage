@@ -35,6 +35,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MasterSlaveReplication, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\MasterSlaveReplication\bin\Debug\MasterSlaveReplication.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -64,10 +68,6 @@
     <ProjectReference Include="..\MasterSlaveConfig\MasterSlaveConfig.csproj">
       <Project>{7E26C354-FE3E-4899-A1FA-1FD21CB4F1AC}</Project>
       <Name>MasterSlaveConfig</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MasterSlaveReplication\MasterSlaveReplication.csproj">
-      <Project>{901F6754-81BA-4D41-87C6-1326649B7C02}</Project>
-      <Name>MasterSlaveReplication</Name>
     </ProjectReference>
     <ProjectReference Include="..\MyServiceLibrary\MyServiceLibrary.csproj">
       <Project>{83615058-2919-4CA9-84C2-5368CEF9F281}</Project>

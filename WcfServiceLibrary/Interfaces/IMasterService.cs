@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ServiceModel;
 
 namespace WcfServiceLibrary.Interfaces
@@ -31,12 +32,21 @@ namespace WcfServiceLibrary.Interfaces
         UserDataContract Find(UserDataContract user);
 
         [OperationContract]
-        IEnumerable<UserDataContract> FindByFirstName(UserDataContract user);
+        IEnumerable<UserDataContract> FindByFirstName(string firstName);
 
         [OperationContract]
-        IEnumerable<UserDataContract> FindByLastName(UserDataContract user);
+        IEnumerable<UserDataContract> FindByLastName(string lastName);
+
+        [OperationContract]
+        IEnumerable<UserDataContract> FindByDateOfBirth(DateTime dateOfBirth);
 
         [OperationContract]
         IEnumerable<UserDataContract> GetAll();
+
+        [OperationContract]
+        bool Remove(UserDataContract user);
+
+        [OperationContract]
+        bool RemoveById(int id);
     }
 }

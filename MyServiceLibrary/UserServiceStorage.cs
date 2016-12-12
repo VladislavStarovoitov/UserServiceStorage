@@ -178,7 +178,7 @@ namespace MyServiceLibrary
         public void Load()
         {
             _users = _saver.Load().ToList();
-            _lastId = _users.Max(u => u.Id);
+            _lastId = _users.Count == 0 ? 0 : _users.Max(u => u.Id);
         }
 
         private void CheckUser(User user)

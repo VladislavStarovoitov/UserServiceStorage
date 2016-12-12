@@ -12,6 +12,11 @@ namespace MasterSlaveReplication
 
         IEnumerable<User> GetAll();
 
-        IEnumerable<User> FindAll(Predicate<User> match);
+        IEnumerable<User> FindByFirstName(string firstName);
+
+        IEnumerable<User> FindByLastName(string lastName);
+
+        IEnumerable<User> FindByDateOfBirth(DateTime dateOfBirth);
+
     }
 }

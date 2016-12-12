@@ -6,10 +6,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace MasterSlaveReplication
 {
-    public class Master: MarshalByRefObject, ISlave
+    public class Master : MarshalByRefObject, ISlave
     {
         private UserServiceStorage _serviceStorage;
         private IEnumerable<IPEndPoint> _ipEndPoints;
@@ -38,7 +39,7 @@ namespace MasterSlaveReplication
             {
                 throw new ArgumentNullException(nameof(collection));
             }
-            
+
             _serviceStorage.AddRange(collection);
             SendMessages(MessageCode.Add, collection);
         }
@@ -53,19 +54,29 @@ namespace MasterSlaveReplication
             return _serviceStorage.Find(x => x.Id == id);
         }
 
-        public IEnumerable<User> FindAll(Predicate<User> match)
-        {            
-            return _serviceStorage.FindAll(match);
+        public IEnumerable<User> FindByFirstName(string firstName)
+        {
+            return _serviceStorage.FindAll(x => x.FirstName == firstName).ToList();
         }
 
-        public IEnumerable<User> GetAll()
+        public IEnumerable<User> FindByLastName(string lastName)
         {
-            return _serviceStorage.GetAll();
+            return _serviceStorage.FindAll(x => x.LastName == lastName).ToList();
+        }
+
+        public IEnumerable<User> FindByDateOfBirth(DateTime dateOfBirth)
+        {
+            return _serviceStorage.FindAll(x => x.DateOfBirth == dateOfBirth).ToList();
+        }
+
+    public IEnumerable<User> GetAll()
+        {
+            return _serviceStorage.GetAll().ToList().ToList();
         }
 
         public void Update(User user)
         {
-            _serviceStorage.Update(user);MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Update, Items = new List<User> { user } };
+            _serviceStorage.Update(user); MasterSlaveMessage<User> message = new MasterSlaveMessage<User> { Code = MessageCode.Update, Items = new List<User> { user } };
             SendMessages(MessageCode.Update, new List<User> { user });
         }
 
@@ -78,7 +89,7 @@ namespace MasterSlaveReplication
         public void Load()
         {
             _serviceStorage.Load();
-            SendMessages(MessageCode.Add, _serviceStorage.GetAll());
+            SendMessages(MessageCode.Load, _serviceStorage.GetAll());
         }
 
         public bool Remove(User item)
