@@ -1,35 +1,27 @@
 ﻿using MasterSlaveReplication.Message;
 using MyServiceLibrary;
-using MyServiceLibrary.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MasterSlaveReplication
 {
-    public class Master: MarshalByRefObject
+    public class Master: MarshalByRefObject, ISlave
     {
-        private IServiceStorage<User> _serviceStorage;
+        private UserServiceStorage _serviceStorage;
         private IEnumerable<IPEndPoint> _ipEndPoints;
 
-        public Master(IEnumerable<IPEndPoint> endpoints, IServiceStorage<User> serviceStorage)
+        public Master(IEnumerable<IPEndPoint> endpoints)
         {
-            if (ReferenceEquals(serviceStorage, null))
-            {
-                throw new ArgumentNullException(nameof(serviceStorage));
-            }
-
             if (ReferenceEquals(endpoints, null))
             {
                 throw new ArgumentNullException(nameof(endpoints));
             }
-            _serviceStorage = serviceStorage;
+
+            _serviceStorage = new UserServiceStorage(new UserXmlSaver());
             _ipEndPoints = endpoints;
         }
 
@@ -61,6 +53,11 @@ namespace MasterSlaveReplication
             return _serviceStorage.Find(x => x.Id == id);
         }
 
+        public IEnumerable<User> FindAll(Predicate<User> match)
+        {            
+            return _serviceStorage.FindAll(match);
+        }
+
         public IEnumerable<User> GetAll()
         {
             return _serviceStorage.GetAll();
@@ -81,6 +78,7 @@ namespace MasterSlaveReplication
         public void Load()
         {
             _serviceStorage.Load();
+            SendMessages(MessageCode.Add, _serviceStorage.GetAll());
         }
 
         public bool Remove(User item)

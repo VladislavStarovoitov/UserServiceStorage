@@ -1,33 +1,27 @@
 ﻿using MyServiceLibrary;
-using ServiceApplication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using MasterSlaveReplication.Message;
-using MyServiceLibrary.Interfaces;
 
 namespace MasterSlaveReplication
 {
-    [Slave]
-    public class Slave : MarshalByRefObject
+    public class Slave : MarshalByRefObject, ISlave
     {
-        private IServiceStorage<User> _serviceStorage;
+        private UserServiceStorage _serviceStorage;
         private ReaderWriterLockSlim _locker = new ReaderWriterLockSlim();
 
-        public Slave(IPEndPoint localEndpoint, IServiceStorage<User> serviceStorage)
+        public Slave(IPEndPoint localEndpoint)
         {
-            if (ReferenceEquals(serviceStorage, null))
+            if (ReferenceEquals(localEndpoint, null))
             {
-                throw new ArgumentNullException(nameof(serviceStorage));
+                throw new ArgumentNullException(nameof(localEndpoint));
             }
-            _serviceStorage = serviceStorage;
+            _serviceStorage = new UserServiceStorage(new MyServiceLibrary.UserXmlSaver());
 
             Thread listenThread = new Thread(new ParameterizedThreadStart(Listen));
             listenThread.Start(localEndpoint);

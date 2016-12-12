@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
-using System.Threading;
 
 namespace MyServiceLibrary
 {
@@ -179,6 +178,7 @@ namespace MyServiceLibrary
         public void Load()
         {
             _users = _saver.Load().ToList();
+            _lastId = _users.Max(u => u.Id);
         }
 
         private void CheckUser(User user)

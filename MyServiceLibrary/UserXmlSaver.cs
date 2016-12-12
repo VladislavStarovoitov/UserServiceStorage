@@ -1,16 +1,12 @@
-﻿using MyServiceLibrary;
-using MyServiceLibrary.Interfaces;
+﻿using MyServiceLibrary.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
-namespace ServiceApplication
+namespace MyServiceLibrary
 {
-    [Serializable]
     public class UserXmlSaver : ISaver<User>
     {
         public IEnumerable<User> Load()
