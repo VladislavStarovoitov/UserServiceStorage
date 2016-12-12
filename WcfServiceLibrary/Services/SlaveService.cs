@@ -71,7 +71,7 @@ namespace WcfServiceLibrary.Services
 
         private void CheckSlaveNumber(int slaveNumber)
         {
-            if (slaveNumber > _slaves.Count - 1)
+            if (slaveNumber > _slaves.Count - 1 && slaveNumber < 0)
             {
                 throw new ArgumentOutOfRangeException();
             }

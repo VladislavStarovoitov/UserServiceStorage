@@ -10,7 +10,7 @@ namespace WcfServiceLibrary
             {
                 Id = dataContract.Id,
                 FirstName = dataContract.FirstName,
-                LastName = dataContract.FirstName,
+                LastName = dataContract.LastName,
                 DateOfBirth = dataContract.DateOfBirth
             };
         }

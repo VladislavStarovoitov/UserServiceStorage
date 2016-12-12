@@ -89,7 +89,7 @@ namespace MasterSlaveReplication
         public void Load()
         {
             _serviceStorage.Load();
-            SendMessages(MessageCode.Load, _serviceStorage.GetAll());
+            SendMessages(MessageCode.Load, _serviceStorage.GetAll().ToList());
         }
 
         public bool Remove(User item)

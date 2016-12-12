@@ -181,6 +181,11 @@ namespace MyServiceLibrary
             _lastId = _users.Count == 0 ? 0 : _users.Max(u => u.Id);
         }
 
+        public void Clear()
+        {
+            _users.Clear();
+        }
+
         private void CheckUser(User user)
         {
             if (ReferenceEquals(user, null))

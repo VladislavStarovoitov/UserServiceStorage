@@ -184,7 +184,7 @@ namespace MasterSlaveReplication
                     break;
 
                 case MessageCode.Load:
-
+                    Load(message.Items);
                     break;
             }
         }
@@ -240,7 +240,7 @@ namespace MasterSlaveReplication
             _locker.EnterWriteLock();
             try
             {
-                _serviceStorage = null;
+                _serviceStorage.Clear();
                 _serviceStorage.AddRange(users);
             }
             finally
