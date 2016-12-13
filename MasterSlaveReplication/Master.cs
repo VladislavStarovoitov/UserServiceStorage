@@ -117,8 +117,7 @@ namespace MasterSlaveReplication
             MasterSlaveMessage<User> message = new MasterSlaveMessage<User>() { Code = code, Items = users };
             foreach (var ipEndPoint in _ipEndPoints)
             {
-                Task.Run(() =>
-                    SendMessage(message, ipEndPoint));
+                SendMessage(message, ipEndPoint);
             }
         }
 
